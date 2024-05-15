@@ -4,24 +4,14 @@ on:
   push:
     branches:
       - main  # Cambia esto al nombre de tu rama principal si es diferente
-# on:
-#   pull_request:
-#     branches:
-#       - main
 
 jobs:
   build-configuration:
-    permissions: write-all 
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        include:
-          - os: ubuntu-latest
-            artifact_name: mything
-            asset_name: mything-linux-amd64
-          - os: macos-latest
-            artifact_name: mything
-            asset_name: mything-macos-amd64
+        os: [ubuntu-latest, macos-latest]
+        system_suffix: [linux-amd64, macos-amd64]
 
     steps:
       - name: Checkout code
@@ -30,7 +20,7 @@ jobs:
       - name: Install Poetry
         run: |
           mkdir dist
-          gcc src/configuration.c -o dist/configuration
+          gcc src/configuration.c -o dist/configuration-${{ matrix.system_suffix }}
           ls -R
 
       - name: Extract version from VERSION file
@@ -49,8 +39,8 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: dist/configuration
-          asset_name: configuration-${{ steps.extract_version.outputs.version }}
+          file: dist/configuration-${{ matrix.system_suffix }}
+          asset_name: configuration-${{ steps.extract_version.outputs.version }}-${{ matrix.os }}-${{ matrix.system_suffix }}
           tag: v${{ steps.extract_version.outputs.version }}
           overwrite: true
           body: |
