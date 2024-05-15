@@ -1,0 +1,53 @@
+name: build configurations
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-configuration:
+    permissions: write-all 
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: mything
+            asset_name: mything-linux-amd64
+          - os: macos-latest
+            artifact_name: mything
+            asset_name: mything-macos-amd64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3.1.0
+
+      - name: Install Poetry
+        run: |
+          mkdir dist
+          gcc src/configuration.c -o dist/configuration
+          ls -R
+
+      - name: Extract version from VERSION file
+        id: extract_version
+        run: |
+          VERSION=$(cat VERSION)
+          echo "Version: $VERSION"
+          echo "::set-output name=version::$VERSION"
+
+      - name: Read release.md file
+        run: |
+          RELEASE_BODY=$(cat release.md)
+          echo "::set-output name=release_body::$RELEASE_BODY"
+
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: dist/configuration
+          asset_name: configuration-${{ steps.extract_version.outputs.version }}
+          tag: v${{ steps.extract_version.outputs.version }}
+          overwrite: true
+          body: |
+            ${{ steps.read_release.outputs.release_body }}
