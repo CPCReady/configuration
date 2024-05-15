@@ -1,9 +1,13 @@
 name: build configurations
 
 on:
-  pull_request:
+  push:
     branches:
-      - main
+      - main  # Cambia esto al nombre de tu rama principal si es diferente
+# on:
+#   pull_request:
+#     branches:
+#       - main
 
 jobs:
   build-configuration:
