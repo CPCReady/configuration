@@ -1,4 +1,4 @@
-name: Install Poetry on Push
+name: build configurations
 
 on:
   pull_request:
@@ -6,8 +6,8 @@ on:
       - main
 
 jobs:
-  install-poetry:
-    permissions: write-all # this is the FIX
+  build-configuration:
+    permissions: write-all 
     runs-on: ubuntu-latest
 
     steps:
@@ -16,31 +16,21 @@ jobs:
 
       - name: Install Poetry
         run: |
-          pip3 install poetry
-          poetry --version
-          poetry install
-          poetry build
-          ls -l dist
-
-      - name: Extract version from pyproject.toml
-        id: extract_version
-        run: |
-          VERSION=$(grep "version =" pyproject.toml | awk '{print $3}' | tr -d '"')
-          echo "Version: $VERSION"
-          echo "::set-output name=version::$VERSION"
+          mkdir dist
+          gcc src/configuration.c -o dist/configuration
           
       - name: Read release.md file
         run: |
           RELEASE_BODY=$(cat release.md)
           echo "::set-output name=release_body::$RELEASE_BODY"
 
-      - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: dist/console-${{ steps.extract_version.outputs.version }}.tar.gz
-          asset_name: console-${{ steps.extract_version.outputs.version }}.tar.gz
-          tag: v${{ steps.extract_version.outputs.version }}
-          overwrite: true
-          body: |
-            ${{ steps.read_release.outputs.release_body }}
+      # - name: Upload binaries to release
+      #   uses: svenstaro/upload-release-action@v2
+      #   with:
+      #     repo_token: ${{ secrets.GITHUB_TOKEN }}
+      #     file: dist/console-${{ steps.extract_version.outputs.version }}.tar.gz
+      #     asset_name: console-${{ steps.extract_version.outputs.version }}.tar.gz
+      #     tag: v${{ steps.extract_version.outputs.version }}
+      #     overwrite: true
+      #     body: |
+      #       ${{ steps.read_release.outputs.release_body }}
